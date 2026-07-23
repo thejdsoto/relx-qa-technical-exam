@@ -1,20 +1,6 @@
 const axios = require('axios');
 const { expect, assert } = require('chai');
-const url = 'https://restful-booker.herokuapp.com/booking';
-const bookingPayload = {
-    "firstname" : "Jim",
-    "lastname" : "Brown",
-    "totalprice" : 111,
-    "depositpaid" : true,
-    "bookingdates" : {
-        "checkin" : "2018-01-01",
-        "checkout" : "2019-01-01"
-    },
-    "additionalneeds" : "Breakfast"
-};
-const headers = {
-    'Accept': 'application/json'
-};
+const { url, headers, bookingPayload, } = require('../../data/booking.data');
 
 describe('Get Booking API', () => {
     let bookingId;

@@ -1,38 +1,19 @@
 const axios = require('axios');
 const { expect } = require('chai');
-const url = 'https://restful-booker.herokuapp.com/booking';
-const bookingPayload = {
-    "firstname" : "Jim",
-    "lastname" : "Brown",
-    "totalprice" : 111,
-    "depositpaid" : true,
-    "bookingdates" : {
-        "checkin" : "2018-01-01",
-        "checkout" : "2019-01-01"
-    },
-    "additionalneeds" : "Breakfast"
-};
-const headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-};
+const { url, headers, bookingPayload, } = require('../../data/booking.data');
+const { getToken } = require('../../helpers/auth.helper');
+const { createBooking } = require('../../helpers/api.helper');
 
 describe('Delete Booking API', () => {
     let token;
     let bookingId;
 
     beforeEach(async () => {
-        const createResponse = await axios.post(url, bookingPayload, { headers });
-        const authResponse = await axios.post('https://restful-booker.herokuapp.com/auth', {
-            username: 'admin',
-            password: 'password123'
-        }, { headers });
-        
+        const createResponse = await createBooking(url, bookingPayload, headers);
         expect(createResponse.data.bookingid).to.be.a('number');
         bookingId = createResponse.data.bookingid;
 
-        expect(authResponse.data.token).to.be.a('string');
-        token = authResponse.data.token;
+        token = await getToken(headers);
     });
 
     it('should delete booking', async () => {

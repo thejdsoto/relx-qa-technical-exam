@@ -1,27 +1,13 @@
 const axios = require('axios');
 const { expect } = require('chai');
-const url = 'https://restful-booker.herokuapp.com/booking';
-const bookingPayload = {
-    "firstname" : "Jim",
-    "lastname" : "Brown",
-    "totalprice" : 111,
-    "depositpaid" : true,
-    "bookingdates" : {
-        "checkin" : "2018-01-01",
-        "checkout" : "2019-01-01"
-    },
-    "additionalneeds" : "Breakfast"
-};
-const headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-};
+const { url, headers, bookingPayload, } = require('../../data/booking.data');
+const { createBooking, validateBooking } = require('../../helpers/api.helper');
 
 describe('Create Booking API', () => {
     
     // Positive test case 
     it('should create a booking successfully', async () => {
-        const response = await axios.post(url, bookingPayload, { headers });
+        const response = await createBooking(url, bookingPayload, headers);
         const booking = response.data.booking;
         
         // HTTP status code assertion
@@ -52,13 +38,7 @@ describe('Create Booking API', () => {
         expect(booking.additionalneeds).to.be.a('string');
 
         // Response data value assertions
-        expect(booking.firstname).to.equal('Jim');
-        expect(booking.lastname).to.equal('Brown');
-        expect(booking.totalprice).to.equal(111);
-        expect(booking.depositpaid).to.equal(true);
-        expect(booking.bookingdates.checkin).to.equal('2018-01-01');
-        expect(booking.bookingdates.checkout).to.equal('2019-01-01');
-        expect(booking.additionalneeds).to.equal('Breakfast');  
+        await validateBooking(booking, bookingPayload); 
     });
 
     // Negative test cases
@@ -67,11 +47,11 @@ describe('Create Booking API', () => {
         delete invalidPayload.firstname;
 
         try {
-            await axios.put(url, invalidPayload, { headers });
+            await createBooking(url, invalidPayload, headers);
 
             throw new Error('Request should have failed');
         } catch (error) {
-            expect(error.response.status).to.equal(404);
+            expect(error.response.status).to.equal(500);
         }
     });
 
@@ -80,7 +60,7 @@ describe('Create Booking API', () => {
         delete invalidPayload.totalprice;
 
         try {
-            await axios.post(url, invalidPayload, { headers });
+            await createBooking(url, invalidPayload, headers );
 
             throw new Error('Request should have failed');
         } catch (error) {
@@ -95,7 +75,7 @@ describe('Create Booking API', () => {
         const invalidPayload = { ...bookingPayload };
         invalidPayload.totalprice = 'dog';
 
-        const response = await axios.post(url, invalidPayload, { headers });
+        const response = await createBooking(url, invalidPayload, headers);
 
         expect(response.status).to.equal(200);
         expect(response.data.booking.totalprice).to.equal(null); 

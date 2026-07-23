@@ -1,49 +1,19 @@
 const axios = require('axios');
 const { expect } = require('chai');
-const url = 'https://restful-booker.herokuapp.com/booking';
-const bookingPayload = {
-    "firstname" : "Jim",
-    "lastname" : "Brown",
-    "totalprice" : 111,
-    "depositpaid" : true,
-    "bookingdates" : {
-        "checkin" : "2018-01-01",
-        "checkout" : "2019-01-01"
-    },
-    "additionalneeds" : "Breakfast"
-};
-const updatedPayload = {
-    "firstname" : "John David",
-    "lastname" : "Soto",
-    "totalprice" : 679,
-    "depositpaid" : false,
-    "bookingdates" : {
-        "checkin" : "2026-01-01",
-        "checkout" : "2026-01-02"
-    },
-    "additionalneeds" : "N/A"
-};
-const headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-};
+const { url, headers, bookingPayload, updatedPayload, authURL } = require('../../data/booking.data');
+const { getToken } = require('../../helpers/auth.helper');
+const { createBooking, validateBooking } = require('../../helpers/api.helper');
 
 describe('Update Booking API', () => {
     let token;
     let bookingId;
 
     before(async () => {
-        const createResponse = await axios.post(url, bookingPayload, { headers });
-        const authResponse = await axios.post('https://restful-booker.herokuapp.com/auth', {
-            username: 'admin',
-            password: 'password123'
-        }, { headers });
-        
+        const createResponse = await createBooking(url, bookingPayload, headers);
         expect(createResponse.data.bookingid).to.be.a('number');
         bookingId = createResponse.data.bookingid;
 
-        expect(authResponse.data.token).to.be.a('string');
-        token = authResponse.data.token;
+        token = await getToken(headers);
     });
 
     it('should update booking successfully', async () => {
@@ -84,13 +54,7 @@ describe('Update Booking API', () => {
         expect(booking.additionalneeds).to.be.a('string');
 
         // Response data value assertions
-        expect(booking.firstname).to.equal('John David');
-        expect(booking.lastname).to.equal('Soto');
-        expect(booking.totalprice).to.equal(679);
-        expect(booking.depositpaid).to.equal(false);
-        expect(booking.bookingdates.checkin).to.equal('2026-01-01');
-        expect(booking.bookingdates.checkout).to.equal('2026-01-02');
-        expect(booking.additionalneeds).to.equal('N/A');  
+        await validateBooking(booking, updatedPayload);
     });
 
     it('should reject missing fields in the update payload', async () => {
