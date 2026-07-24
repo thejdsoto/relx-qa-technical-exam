@@ -71,6 +71,10 @@ class HomePage extends Page {
         return $('button[type="submit"][aria-label="Search"]');
     }
 
+    get validationMessages() {
+        return $$('li[role="alert"]');
+    }
+
     async clearOrigin() {
         const flightOrigin = await $('[aria-label="Flight origin input"]');
         await flightOrigin.$('[aria-label="Remove value"]').click();
