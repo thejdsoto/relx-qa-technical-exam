@@ -45,16 +45,14 @@ describe('Flight results', () => {
         await HomePage.setReturnDate();
         await HomePage.setPassengers(2, 1, 0, 'Economy'); // 2 adults, 1 child, 0 infants
         await HomePage.search();
-        console.log(await browser.getUrl());
-        console.log(await browser.getWindowHandles());
 
         // Assert if search result page is navigated correctly  
-        const url = await browser.getUrl();
         await SearchResultsPage.switchToResultsWindow();
         await expect(browser).toHaveUrl(
             expect.stringContaining('/flight-search/')
         );
 
+        // Wait for cards to be populated
         await browser.waitUntil(async () => {
             const cards = await SearchResultsPage.resultCards;
             return cards.length > 0;
@@ -145,10 +143,11 @@ describe('Flight results', () => {
             expect.stringContaining("Please enter a valid 'Depart' date.")
         );
 
-        // No returen date error message
+        // No return date error message
         expect(texts).toHaveText(
             expect.stringContaining("Please enter a valid 'Return' date. If you wish to search for a one-way flight, please click the 'One-way' button above.")
         );
     });
 
 });
+    
