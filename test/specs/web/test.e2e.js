@@ -1,6 +1,7 @@
 const { expect } = require('@wdio/globals');
 const HomePage = require('../../pageobjects/home.page');
 const SearchResultsPage = require('../../pageobjects/searchResults.page');
+const { flightDetails, errorMessages } = require('../../data/web.flight.data');
 
 describe('HomePage', () => {
 
@@ -39,11 +40,11 @@ describe('Flight results', () => {
 
     it('should be able to search valid round-trip flights', async () => {
         await HomePage.clearOrigin();
-        await HomePage.setOrigin('Manila');
-        await HomePage.setDestination('Boracay');
+        await HomePage.setOrigin(flightDetails.origin);
+        await HomePage.setDestination(flightDetails.destination);
         await HomePage.setDepartureDate();
         await HomePage.setReturnDate();
-        await HomePage.setPassengers(2, 1, 0, 'Economy'); // 2 adults, 1 child, 0 infants
+        await HomePage.setPassengers(flightDetails.adult, flightDetails.child, flightDetails.infant, flightDetails.travelClass);
         await HomePage.search();
 
         // Assert if search result page is navigated correctly  
@@ -66,60 +67,61 @@ describe('Flight results', () => {
         expect(cards.length).toBeGreaterThan(0);
 
         // Assert that the expected airports are displayed
-        const firstCard = SearchResultsPage.resultCards[0];
+        const firstCard = cards[0];
+        await firstCard.waitForDisplayed({ timeout: 5000 });
         const text = await firstCard.getText();
 
         await expect(firstCard).toHaveText(
-            expect.stringContaining('MNL')
+            expect.stringContaining(flightDetails.originCode)
         );
 
         await expect(firstCard).toHaveText(
-            expect.stringContaining('MPH')
+            expect.stringContaining(flightDetails.destinationCode)
         );
     });
 
     it('search without origin', async () => {
         await HomePage.clearOrigin();
-        await HomePage.setDestination('Boracay');
+        await HomePage.setDestination(flightDetails.destination);
         await HomePage.setDepartureDate();
         await HomePage.setReturnDate();
-        await HomePage.setPassengers(2, 1, 0, 'Economy'); // 2 adults, 1 child, 0 infants
+        await HomePage.setPassengers(flightDetails.adult, flightDetails.child, flightDetails.infant, flightDetails.travelClass);
         await HomePage.search();
         const texts = await HomePage.validationMessages;
 
         // Error message
         expect(texts).toHaveText(
-            expect.stringContaining("Please enter a 'From' airport.")
+            expect.stringContaining(errorMessages.origin)
         );
     });
 
     it('search without destination', async () => {
         await HomePage.clearOrigin();
-        await HomePage.setOrigin('Manila');
+        await HomePage.setOrigin(flightDetails.origin);
         await HomePage.setDepartureDate();
         await HomePage.setReturnDate();
-        await HomePage.setPassengers(2, 1, 0, 'Economy'); // 2 adults, 1 child, 0 infants
+        await HomePage.setPassengers(flightDetails.adult, flightDetails.child, flightDetails.infant, flightDetails.travelClass);
         await HomePage.search();
         const texts = await HomePage.validationMessages;
 
         // Error message
         expect(texts).toHaveText(
-            expect.stringContaining("Please enter a 'To' airport.")
+            expect.stringContaining(errorMessages.destination)
         );
     });
 
     it('search without departure date', async () => {
         await HomePage.clearOrigin();
-        await HomePage.setOrigin('Manila');
-        await HomePage.setDestination('Boracay');
+        await HomePage.setOrigin(flightDetails.origin);
+        await HomePage.setDestination(flightDetails.destination);
         await HomePage.setReturnDate();
-        await HomePage.setPassengers(2, 1, 0, 'Economy'); // 2 adults, 1 child, 0 infants
+        await HomePage.setPassengers(flightDetails.adult, flightDetails.child, flightDetails.infant, flightDetails.travelClass);
         await HomePage.search();
         const texts = await HomePage.validationMessages;
 
       // Error message
         expect(texts).toHaveText(
-            expect.stringContaining("Please enter a valid 'Depart' date.")
+            expect.stringContaining(errorMessages.departureDate)
         );
 
     });
@@ -130,22 +132,22 @@ describe('Flight results', () => {
 
         // No origin error message
         expect(texts).toHaveText(
-            expect.stringContaining("Please enter a 'From' airport.")
+            expect.stringContaining(errorMessages.origin)
         );
 
         // No destination error message
         expect(texts).toHaveText(
-            expect.stringContaining("Please enter a 'To' airport.")
+            expect.stringContaining(errorMessages.destination)
         );
 
         // No departure date error message
         expect(texts).toHaveText(
-            expect.stringContaining("Please enter a valid 'Depart' date.")
+            expect.stringContaining(errorMessages.departureDate)
         );
 
         // No return date error message
         expect(texts).toHaveText(
-            expect.stringContaining("Please enter a valid 'Return' date. If you wish to search for a one-way flight, please click the 'One-way' button above.")
+            expect.stringContaining(errorMessages.returnDate)
         );
     });
 
