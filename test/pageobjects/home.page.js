@@ -77,7 +77,36 @@ class HomePage extends Page {
 
     async clearOrigin() {
         const flightOrigin = await $('[aria-label="Flight origin input"]');
-        await flightOrigin.$('[aria-label="Remove value"]').click();
+        const removeBtn = await flightOrigin.$('[aria-label="Remove value"]');
+        if (!removeBtn || !(await removeBtn.isExisting())) {
+            return;
+        }
+
+        let displayed = false;
+        try {
+            displayed = await removeBtn.isDisplayed();
+        } catch (err) {
+            displayed = false;
+        }
+
+        if (!displayed) return;
+
+        await removeBtn.waitForClickable({ timeout: 3000 });
+        try {
+            await removeBtn.click();
+        } catch (err) {
+            const msg = err && err.message ? err.message : '';
+            if (/stale element reference/i.test(msg)) {
+                const freshOrigin = await $('[aria-label="Flight origin input"]');
+                const freshRemove = await freshOrigin.$('[aria-label="Remove value"]');
+                if (await freshRemove.isExisting()) {
+                    await freshRemove.waitForClickable({ timeout: 3000 });
+                    await freshRemove.click();
+                }
+            } else {
+                throw err;
+            }
+        }
     }
 
     async setOrigin(location) {
@@ -176,7 +205,21 @@ class HomePage extends Page {
     }
 
     async search() {
-        await this.searchFlightButton.click();
+        const maxAttempts = 3;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                await this.searchFlightButton.waitForClickable({ timeout: 5000 });
+                await this.searchFlightButton.click();
+                return;
+            } catch (err) {
+                const msg = err && err.message ? err.message : '';
+                if (/stale element reference/i.test(msg) && attempt < maxAttempts) {
+                    await browser.pause(500);
+                    continue;
+                }
+                throw err;
+            }
+        }
     }
 
     open() {
